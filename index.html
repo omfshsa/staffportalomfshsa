@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,17 +7,19 @@
   <title>OMFS HSA Staff Portal</title>
   <meta name="description" content="Centralized hub for OMFS HSA department applications.">
 
-  <!-- PWA / Android -->
-  <link rel="manifest" href="manifest.webmanifest">
-  <meta name="theme-color" content="#1e3c72">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
 
-  <!-- iPhone / iPad Home Screen -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#1e3c72" id="theme-color-meta">
+
   <meta name="apple-mobile-web-app-title" content="OMFS HSA">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 
-  <!-- Optional favicons -->
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
 
@@ -26,20 +28,75 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <style>
+    /* CSS Variables for Light/Dark Mode */
+    :root {
+      --bg-color: #f4f7f6;
+      --text-color: #2c3e50;
+      --card-bg: #ffffff;
+      --card-shadow: rgba(0,0,0,0.05);
+      --card-shadow-hover: rgba(0,0,0,0.1);
+      --header-bg: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      --desc-color: #6c757d;
+      --border-color: transparent;
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #121212;
+      --text-color: #e0e0e0;
+      --card-bg: #1e1e1e;
+      --card-shadow: rgba(0,0,0,0.3);
+      --card-shadow-hover: rgba(0,0,0,0.5);
+      --header-bg: linear-gradient(135deg, #0d1b33 0%, #162b50 100%);
+      --desc-color: #a0aab2;
+      --border-color: #333;
+    }
+
     body {
       font-family: 'Poppins', sans-serif;
-      background-color: #f4f7f6;
-      color: #2c3e50;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      transition: background-color 0.3s ease, color 0.3s ease;
     }
 
     .portal-header {
-      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      background: var(--header-bg);
       color: white;
-      padding: 3rem 1rem;
+      padding: 3rem 1rem 2rem 1rem;
       border-bottom-left-radius: 20px;
       border-bottom-right-radius: 20px;
       box-shadow: 0 4px 15px rgba(0,0,0,0.1);
       margin-bottom: 2rem;
+      position: relative;
+    }
+
+    .header-controls {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-icon {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.3s;
+    }
+
+    .btn-icon:hover {
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    .hospital-logo {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
     }
 
     .portal-header h1 {
@@ -47,29 +104,49 @@
       letter-spacing: 1px;
     }
 
+    .search-container {
+      max-width: 500px;
+      margin: 1.5rem auto 0 auto;
+    }
+
     .app-card {
-      background: white;
+      background: var(--card-bg);
       border-radius: 15px;
-      border: none;
+      border: 1px solid var(--border-color);
       padding: 1.5rem;
       transition: all 0.3s ease;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+      box-shadow: 0 4px 6px var(--card-shadow);
       height: 100%;
-      min-height: 210px;
+      min-height: 220px;
       text-align: center;
       text-decoration: none;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      color: #2c3e50;
+      color: var(--text-color);
+      position: relative;
       -webkit-tap-highlight-color: transparent;
     }
 
-    .app-card:hover, .app-card:focus {
+    .app-card:hover {
       transform: translateY(-5px);
-      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-      outline: none;
+      box-shadow: 0 10px 20px var(--card-shadow-hover);
+      text-decoration: none;
+      color: var(--text-color);
+    }
+
+    /* Accessibility Focus */
+    .app-card:focus-visible {
+      outline: 3px solid #0d6efd;
+      outline-offset: 4px;
+    }
+
+    .status-badge {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      font-size: 0.7rem;
     }
 
     .app-icon {
@@ -92,128 +169,158 @@
 
     .app-desc {
       font-size: 0.85rem;
-      color: #6c757d;
+      color: var(--desc-color);
     }
 
+    /* Theme Colors */
     .theme-blue .app-icon { color: #0d6efd; background: rgba(13, 110, 253, 0.1); }
-    .theme-blue:hover .app-icon, .theme-blue:focus .app-icon { background: #0d6efd; color: white; }
-    .theme-blue:hover .app-title, .theme-blue:focus .app-title { color: #0d6efd; }
+    .theme-blue:hover .app-icon, .theme-blue:focus-visible .app-icon { background: #0d6efd; color: white; }
+    .theme-blue:hover .app-title, .theme-blue:focus-visible .app-title { color: #0d6efd; }
 
     .theme-orange .app-icon { color: #fd7e14; background: rgba(253, 126, 20, 0.1); }
-    .theme-orange:hover .app-icon, .theme-orange:focus .app-icon { background: #fd7e14; color: white; }
-    .theme-orange:hover .app-title, .theme-orange:focus .app-title { color: #fd7e14; }
+    .theme-orange:hover .app-icon, .theme-orange:focus-visible .app-icon { background: #fd7e14; color: white; }
+    .theme-orange:hover .app-title, .theme-orange:focus-visible .app-title { color: #fd7e14; }
 
     .theme-green .app-icon { color: #198754; background: rgba(25, 135, 84, 0.1); }
-    .theme-green:hover .app-icon, .theme-green:focus .app-icon { background: #198754; color: white; }
-    .theme-green:hover .app-title, .theme-green:focus .app-title { color: #198754; }
+    .theme-green:hover .app-icon, .theme-green:focus-visible .app-icon { background: #198754; color: white; }
+    .theme-green:hover .app-title, .theme-green:focus-visible .app-title { color: #198754; }
 
     .theme-purple .app-icon { color: #6f42c1; background: rgba(111, 66, 193, 0.1); }
-    .theme-purple:hover .app-icon, .theme-purple:focus .app-icon { background: #6f42c1; color: white; }
-    .theme-purple:hover .app-title, .theme-purple:focus .app-title { color: #6f42c1; }
+    .theme-purple:hover .app-icon, .theme-purple:focus-visible .app-icon { background: #6f42c1; color: white; }
+    .theme-purple:hover .app-title, .theme-purple:focus-visible .app-title { color: #6f42c1; }
 
     .theme-red .app-icon { color: #dc3545; background: rgba(220, 53, 69, 0.1); }
-    .theme-red:hover .app-icon, .theme-red:focus .app-icon { background: #dc3545; color: white; }
-    .theme-red:hover .app-title, .theme-red:focus .app-title { color: #dc3545; }
+    .theme-red:hover .app-icon, .theme-red:focus-visible .app-icon { background: #dc3545; color: white; }
+    .theme-red:hover .app-title, .theme-red:focus-visible .app-title { color: #dc3545; }
 
     .theme-teal .app-icon { color: #20c997; background: rgba(32, 201, 151, 0.1); }
-    .theme-teal:hover .app-icon, .theme-teal:focus .app-icon { background: #20c997; color: white; }
-    .theme-teal:hover .app-title, .theme-teal:focus .app-title { color: #20c997; }
+    .theme-teal:hover .app-icon, .theme-teal:focus-visible .app-icon { background: #20c997; color: white; }
+    .theme-teal:hover .app-title, .theme-teal:focus-visible .app-title { color: #20c997; }
 
+    /* Disabled/Coming Soon */
+    .app-card.disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+    .app-card.disabled:hover {
+      transform: none;
+      box-shadow: 0 4px 6px var(--card-shadow);
+    }
+    
     .footer-note {
       font-size: 0.8rem;
-      color: #6c757d;
+      color: var(--desc-color);
       text-align: center;
       margin-top: 2rem;
     }
 
+    /* iOS Install Prompt Modal */
+    #ios-prompt {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--card-bg);
+      color: var(--text-color);
+      padding: 15px 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      z-index: 1000;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+      border: 1px solid var(--border-color);
+    }
+
     @media (max-width: 575.98px) {
-      .portal-header {
-        padding: 2.2rem 1rem;
-      }
-
-      .portal-header h1 {
-        font-size: 1.65rem;
-      }
-
-      .portal-header .lead {
-        font-size: 0.95rem;
-      }
-
-      .app-card {
-        padding: 1rem;
-        min-height: 185px;
-      }
-
-      .app-icon {
-        width: 68px;
-        height: 68px;
-        font-size: 2rem;
-      }
-
-      .app-title {
-        font-size: 0.98rem;
-      }
-
-      .app-desc {
-        font-size: 0.78rem;
-      }
+      .portal-header { padding: 3rem 1rem 1.5rem 1rem; }
+      .portal-header h1 { font-size: 1.65rem; }
+      .portal-header .lead { font-size: 0.95rem; }
+      .app-card { padding: 1rem; min-height: 195px; }
+      .app-icon { width: 68px; height: 68px; font-size: 2rem; }
+      .app-title { font-size: 0.98rem; }
+      .app-desc { font-size: 0.78rem; }
     }
   </style>
 </head>
 
 <body>
   <header class="portal-header text-center">
+    <div class="header-controls">
+      <button id="installBtn" class="btn-icon" style="display: none;" aria-label="Install App" title="Install App">
+        <i class="fa-solid fa-download"></i>
+      </button>
+      <button id="themeToggle" class="btn-icon" aria-label="Toggle Dark Mode">
+        <i class="fa-solid fa-moon"></i>
+      </button>
+    </div>
+
     <div class="container">
+      <div class="hospital-logo"><i class="fa-solid fa-staff-snake"></i></div>
       <h1>OMFS HSA Staff Portal</h1>
       <p class="lead">Centralized hub for all department applications</p>
+      
+      <div class="search-container">
+        <div class="input-group">
+          <span class="input-group-text bg-white border-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+          <input type="text" id="searchInput" class="form-control border-0" placeholder="Search applications..." aria-label="Search applications">
+        </div>
+      </div>
     </div>
   </header>
 
   <main class="container mb-5">
-    <div class="row g-4">
+    <div class="row g-4" id="appGrid">
 
-      <div class="col-6 col-md-4 col-lg-3">
-        <a href="https://slot-charmer.lovable.app" target="_blank" rel="noopener" class="app-card theme-blue">
+      <div class="col-6 col-md-4 col-lg-3 app-item" data-title="GA List System">
+        <a href="https://slot-charmer.lovable.app" target="_blank" rel="noopener" class="app-card theme-blue" aria-label="Open GA List System to book OT slots">
+          <span class="badge bg-success status-badge">Online</span>
           <div class="app-icon"><i class="fa-solid fa-calendar-check"></i></div>
           <div class="app-title">GA List System</div>
           <div class="app-desc">Book OT slot, create GA List</div>
         </a>
       </div>
 
-      <div class="col-6 col-md-4 col-lg-3">
-        <a href="https://script.google.com/macros/s/AKfycbxz1hD3nGFAsnMXPTFSc3tKK2MCigqs2qPaBXu2MFg4qZA-baCdM4zDILJ3fFHMdIwb/exec" target="_blank" rel="noopener" class="app-card theme-orange">
+      <div class="col-6 col-md-4 col-lg-3 app-item" data-title="Stor Unit">
+        <a href="https://script.google.com/macros/s/AKfycbxz1hD3nGFAsnMXPTFSc3tKK2MCigqs2qPaBXu2MFg4qZA-baCdM4zDILJ3fFHMdIwb/exec" target="_blank" rel="noopener" class="app-card theme-orange" aria-label="Open Stor Unit to track inventory and spending">
+          <span class="badge bg-success status-badge">Online</span>
           <div class="app-icon"><i class="fa-solid fa-user-doctor"></i></div>
           <div class="app-title">Stor Unit</div>
           <div class="app-desc">Track ins outs, track spending</div>
         </a>
       </div>
 
-      <div class="col-6 col-md-4 col-lg-3">
-        <a href="https://staff-shine-94.lovable.app" target="_blank" rel="noopener" class="app-card theme-green">
+      <div class="col-6 col-md-4 col-lg-3 app-item" data-title="Staff Planner">
+        <a href="https://staff-shine-94.lovable.app" target="_blank" rel="noopener" class="app-card theme-green" aria-label="Open Staff Planner for leave and schedule management">
+          <span class="badge bg-success status-badge">Online</span>
           <div class="app-icon"><i class="fa-solid fa-clipboard-list"></i></div>
           <div class="app-title">Staff Planner</div>
           <div class="app-desc">Cuti rehat, off, EL, MC, kursus, meeting</div>
         </a>
       </div>
 
-      <div class="col-6 col-md-4 col-lg-3">
-        <a href="#" target="_blank" rel="noopener" class="app-card theme-purple">
+      <div class="col-6 col-md-4 col-lg-3 app-item" data-title="Biopsy Registry">
+        <a href="#" class="app-card theme-purple disabled" aria-label="Biopsy Registry (Coming Soon)" onclick="event.preventDefault(); alert('Biopsy Registry is currently in development.');">
+          <span class="badge bg-secondary status-badge">Coming Soon</span>
           <div class="app-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div>
           <div class="app-title">Biopsy Registry</div>
           <div class="app-desc">Record biopsy and HPE diagnosis</div>
         </a>
       </div>
 
-      <div class="col-6 col-md-4 col-lg-3">
-        <a href="#" target="_blank" rel="noopener" class="app-card theme-red">
+      <div class="col-6 col-md-4 col-lg-3 app-item" data-title="KPI Jabatan">
+        <a href="#" class="app-card theme-red disabled" aria-label="KPI Jabatan (Coming Soon)" onclick="event.preventDefault(); alert('KPI Jabatan is currently in development.');">
+          <span class="badge bg-secondary status-badge">Coming Soon</span>
           <div class="app-icon"><i class="fa-solid fa-book-medical"></i></div>
           <div class="app-title">KPI Jabatan</div>
           <div class="app-desc">Link to KPI OMFS</div>
         </a>
       </div>
 
-      <div class="col-6 col-md-4 col-lg-3">
-        <a href="#" target="_blank" rel="noopener" class="app-card theme-teal">
+      <div class="col-6 col-md-4 col-lg-3 app-item" data-title="Inventory">
+        <a href="#" class="app-card theme-teal disabled" aria-label="Inventory (Coming Soon)" onclick="event.preventDefault(); alert('Inventory system is currently in development.');">
+          <span class="badge bg-secondary status-badge">Coming Soon</span>
           <div class="app-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
           <div class="app-title">Inventory</div>
           <div class="app-desc">Order dental & surgical supplies</div>
@@ -223,11 +330,97 @@
     </div>
 
     <div class="footer-note">
-      Add this portal to your phone Home Screen for quick access.
+      Stay connected. Accessible anywhere, anytime.
     </div>
   </main>
 
+  <div id="ios-prompt">
+    <p class="mb-2 text-start fs-6">Install this portal on your iPhone:</p>
+    <p class="mb-0 text-start small text-muted">Tap the Share icon <i class="fa-solid fa-arrow-up-from-bracket mx-1"></i> and select <strong>"Add to Home Screen"</strong>.</p>
+    <button class="btn btn-sm btn-outline-secondary w-100 mt-3" onclick="document.getElementById('ios-prompt').style.display='none'">Dismiss</button>
+  </div>
+
   <script>
+    // --- 1. Dark Mode Toggle ---
+    const themeToggle = document.getElementById('themeToggle');
+    const htmlEl = document.documentElement;
+    const themeIcon = themeToggle.querySelector('i');
+    const metaThemeColor = document.getElementById('theme-color-meta');
+
+    // Check saved theme
+    const savedTheme = localStorage.getItem('omfs-theme') || 'light';
+    setTheme(savedTheme);
+
+    themeToggle.addEventListener('click', () => {
+      const currentTheme = htmlEl.getAttribute('data-theme');
+      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+      setTheme(newTheme);
+    });
+
+    function setTheme(theme) {
+      htmlEl.setAttribute('data-theme', theme);
+      localStorage.setItem('omfs-theme', theme);
+      if (theme === 'dark') {
+        themeIcon.classList.replace('fa-moon', 'fa-sun');
+        metaThemeColor.setAttribute('content', '#0d1b33');
+      } else {
+        themeIcon.classList.replace('fa-sun', 'fa-moon');
+        metaThemeColor.setAttribute('content', '#1e3c72');
+      }
+    }
+
+    // --- 2. Search/Filter Functionality ---
+    const searchInput = document.getElementById('searchInput');
+    const appItems = document.querySelectorAll('.app-item');
+
+    searchInput.addEventListener('input', (e) => {
+      const term = e.target.value.toLowerCase();
+      appItems.forEach(item => {
+        const title = item.getAttribute('data-title').toLowerCase();
+        if (title.includes(term)) {
+          item.style.display = 'block';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    });
+
+    // --- 3. PWA Install Logic (Android / Desktop Chrome) ---
+    let deferredPrompt;
+    const installBtn = document.getElementById('installBtn');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.style.display = 'flex'; // Show the install button
+    });
+
+    installBtn.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          installBtn.style.display = 'none';
+        }
+        deferredPrompt = null;
+      }
+    });
+
+    // --- 4. iOS Detection and Prompt ---
+    const isIos = () => {
+      const userAgent = window.navigator.userAgent.toLowerCase();
+      return /iphone|ipad|ipod/.test(userAgent);
+    };
+    const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone);
+
+    if (isIos() && !isInStandaloneMode()) {
+      // Show prompt if on iOS and not already installed
+      setTimeout(() => {
+        document.getElementById('ios-prompt').style.display = 'block';
+      }, 2000); // delay 2 seconds
+    }
+
+    // --- 5. Service Worker Registration ---
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
         navigator.serviceWorker.register('./sw.js').catch(function (error) {
