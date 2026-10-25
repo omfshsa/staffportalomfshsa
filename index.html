@@ -276,13 +276,16 @@
           /^\/(?:a\/macros\/[^/]+\/)?macros\/s\/[^/]+\/exec$/.test(parsed.pathname);
       } catch (_) { return false; }
     }
+    // Read-only JSONP connection to the Apps Script web app.
+    // Apps Script ContentService redirects sometimes fail transiently. Retrying
+    // with a new callback and a new URL lets the page recover gracefully.
     function rpc(method) {
       if (method !== 'listPortalApps') return Promise.reject(new Error('Administrator functions must be used in the Apps Script console.'));
       if (!isAppsScriptUrl(APPS_SCRIPT_URL)) {
         return Promise.reject(new Error('GitHub setup is incomplete: edit config.js with the Apps Script /exec URL.'));
       }
-      return new Promise((resolve,reject)=>{
-        // JSONP is only used for public app listings. Never put secrets in the URL.
+      const maxAttempts = 3;
+      const runOnce = () => new Promise((resolve, reject) => {
         const callback='omfsCB_'+Date.now().toString(36)+'_'+(++requestSeq).toString(36)+'_'+
           Math.random().toString(36).slice(2,10);
         const script=document.createElement('script');
@@ -295,14 +298,29 @@
           }
           finish(null,message.apps);
         };
-        const timeout=setTimeout(()=>finish(new Error('Server did not respond. Verify Apps Script is deployed to Anyone and the URL is correct.')),16000);
-        script.onerror=()=>finish(new Error('Cannot load app list. Check network, script deployment and URL.'));
+        const timeout=setTimeout(()=>finish(new Error('Connection timed out. Check Apps Script permissions and /exec deployment.')),12000);
+        script.onerror=()=>finish(new Error('The Apps Script response could not be loaded.'));
         const query=new URL(APPS_SCRIPT_URL);
         query.searchParams.set('action','public');query.searchParams.set('callback',callback);
-        query.searchParams.set('_',String(Date.now()));
+        query.searchParams.set('_',String(Date.now())+'_'+requestSeq);
         script.src=query.href;
         document.head.appendChild(script);
       });
+      return (async () => {
+        let lastError;
+        for (let attempt=1; attempt<=maxAttempts; attempt++) {
+          try {return await runOnce();}
+          catch (error) {
+            // Do not retry a valid server response reporting an application error.
+            // Retry only failures that may be temporary HTTP/redirect/network issues.
+            const msg=String(error && error.message || error);
+            if (!/could not be loaded|timed out/i.test(msg)) throw error;
+            lastError=error;
+            if (attempt<maxAttempts) await new Promise(done=>setTimeout(done,attempt===1?1800:3400));
+          }
+        }
+        throw new Error('The app directory could not be loaded after 3 attempts. Test the Apps Script public endpoint in a private browser window, then check the backend Code.gs, deployment access (Anyone), and config.js /exec URL.');
+      })();
     }
     function readAppCache() {
       try { const value=JSON.parse(localStorage.getItem(APPS_CACHE_KEY)); return Array.isArray(value)?value:[]; }
