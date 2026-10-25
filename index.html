@@ -1,9 +1,15 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
-  <base target="_blank">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="OMFS HSA">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
+  <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#1e3c72" id="theme-color-meta">
   <title>OMFS HSA Staff Portal</title>
   <meta name="description" content="OMFS HSA applications — favourites, recently used and searchable directory.">
@@ -200,27 +206,22 @@
     </section>
 
     <section id="adminView" hidden>
-      <div class="content-head"><div><h2>Application Management</h2><p class="hint">Administrators can add, edit, reorder, deactivate and delete applications</p></div></div>
-      <div id="adminLogin" class="login-panel" style="max-width:480px">
-        <p class="mb-3">Enter the administrator passphrase to manage the shared Google Sheets application directory.</p>
-        <form id="adminLoginForm" class="d-flex flex-column gap-3">
-          <div><label class="form-label" for="adminPassword">Administrator passphrase</label><input class="form-control" type="password" id="adminPassword" autocomplete="off" required placeholder="Enter passphrase"></div>
-          <button class="btn btn-primary align-self-start" type="submit"><i class="fa-solid fa-lock-open me-2"></i>Unlock management</button>
-        </form>
-        <p class="form-text mt-3 mb-0">Set <code>PORTAL_ADMIN_KEY</code> in Apps Script → Project Settings → Script properties before first use.</p>
-      </div>
-      <div id="adminPanel" class="manage-panel" hidden>
-        <div class="d-flex gap-2 flex-wrap align-items-center mb-3 admin-tools">
-          <button class="btn btn-primary btn-sm" id="addAppBtn" type="button"><i class="fa-solid fa-plus me-1"></i>Add Application</button>
-          <button class="btn btn-outline-secondary btn-sm" id="importBtn" type="button"><i class="fa-solid fa-file-import me-1"></i>Import old browser apps</button>
-          <button class="btn btn-outline-secondary btn-sm ms-auto" id="adminLogout" type="button"><i class="fa-solid fa-right-from-bracket me-1"></i>Log out</button>
+      <div class="content-head"><div><h2>Manage Applications</h2><p class="hint">Secure administration is hosted directly on Google Apps Script</p></div></div>
+      <div class="manage-panel" style="max-width:650px">
+        <div class="d-flex gap-3 align-items-start mb-3">
+          <div class="brand-emblem" style="background:var(--muted);color:#2a5298;flex-shrink:0"><i class="fa-solid fa-lock"></i></div>
+          <div><h3 style="font-size:17px;font-weight:700">Administrator Console</h3>
+          <p style="color:var(--sub);font-size:12px;margin:0">Manage applications, categories, links, ordering and status in Google Sheets. Your administrator passphrase stays off GitHub Pages.</p></div>
         </div>
-        <div class="row g-2 mb-3">
-          <div class="col-sm-8"><input id="adminSearch" class="form-control" type="search" placeholder="Filter by name, category or tag..."></div>
-          <div class="col-sm-4"><select id="adminStatusFilter" class="form-select"><option value="All">All statuses</option><option>Online</option><option>Coming Soon</option><option>Inactive</option></select></div>
+        <a id="openManageLink" class="btn btn-primary" href="#" target="_blank" rel="noopener noreferrer">
+          <i class="fa-solid fa-arrow-up-right-from-square me-2"></i>Open Administrator Console
+        </a>
+        <p class="form-text mt-3 mb-2">This opens a separate secure Google Apps Script page. Return here and tap Refresh to see shared changes.</p>
+        <div id="legacyExportPanel" hidden style="border-top:1px solid var(--line);margin-top:18px;padding-top:16px">
+          <strong>Previous portal data detected</strong>
+          <p class="form-text mt-2">This browser still contains app entries from the older portal. Export them as JSON, then use Import JSON file in the Apps Script administrator console.</p>
+          <button id="exportLegacyBtn" class="btn btn-outline-primary btn-sm" type="button"><i class="fa-solid fa-file-export me-2"></i>Export previous browser apps</button>
         </div>
-        <div id="adminCount" class="form-text mb-2"></div>
-        <div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>Application</th><th>Category</th><th>Status</th><th>Order</th><th style="min-width:140px">Actions</th></tr></thead><tbody id="adminRows"></tbody></table></div>
       </div>
     </section>
     <p class="footer">OMFS HSA Staff Portal · Fast access to department applications</p>
@@ -233,27 +234,10 @@
     <button class="bottom-item" data-view="admin" type="button"><i class="fa-solid fa-gear"></i><span>Manage</span></button>
   </nav>
 
-  <div class="modal fade" id="appModal" tabindex="-1" aria-labelledby="appModalTitle" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable"><div class="modal-content">
-      <div class="modal-header"><h5 class="modal-title" id="appModalTitle">Add Application</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
-      <form id="appForm"><div class="modal-body"><input type="hidden" id="editAppId">
-        <div class="row g-3">
-          <div class="col-md-6"><label class="form-label" for="appTitle">Application Name *</label><input id="appTitle" class="form-control" maxlength="120" required></div>
-          <div class="col-md-6"><label class="form-label" for="appUrl">Application URL</label><input id="appUrl" class="form-control" type="url" maxlength="2000" placeholder="https://..."><div class="form-text">Required when status is Online</div></div>
-          <div class="col-md-12"><label class="form-label" for="appDesc">Description</label><input id="appDesc" class="form-control" maxlength="500"></div>
-          <div class="col-md-6"><label class="form-label" for="appCategory">Category *</label><input id="appCategory" class="form-control" list="categorySuggestions" maxlength="70" required><datalist id="categorySuggestions"></datalist></div>
-          <div class="col-md-6"><label class="form-label" for="appTags">Tags / Keywords</label><input id="appTags" class="form-control" maxlength="250" placeholder="e.g. OT, bookings, theatre"></div>
-          <div class="col-md-6"><label class="form-label" for="appIcon">Font Awesome Icon</label><input id="appIcon" class="form-control" maxlength="90" value="fa-solid fa-link"><div class="form-text">Example: fa-solid fa-calendar-check</div></div>
-          <div class="col-md-6"><label class="form-label" for="appColor">Colour</label><select id="appColor" class="form-select"><option value="theme-blue">Blue</option><option value="theme-orange">Orange</option><option value="theme-green">Green</option><option value="theme-purple">Purple</option><option value="theme-red">Red</option><option value="theme-teal">Teal</option></select></div>
-          <div class="col-md-6"><label class="form-label" for="appStatus">Status</label><select id="appStatus" class="form-select"><option>Online</option><option>Coming Soon</option><option>Inactive</option></select></div>
-          <div class="col-md-6"><label class="form-label" for="appOrder">Sort Order</label><input id="appOrder" class="form-control" type="number" min="0" max="1000000" step="any" placeholder="Automatic for new apps"></div>
-        </div>
-      </div><div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary">Save Application</button></div></form>
-    </div></div>
-  </div>
   <div id="busyOverlay" role="status" aria-live="polite"><div class="busy-box"><div class="spinner-border text-primary" aria-hidden="true"></div><p id="busyLabel">Loading applications...</p></div></div>
   <div id="toastArea" aria-live="polite"></div>
 
+  <script src="config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
   (() => {
@@ -261,12 +245,11 @@
     const FAV_KEY = 'omfs-portal-favourites-v3';
     const RECENT_KEY = 'omfs-portal-recent-v3';
     const THEME_KEY = 'omfs-theme';
-    const state = { apps:[], adminApps:[], adminKey:'', view:'home', category:'All', query:'', expanded:new Set(), ready:false,
+    const state = { apps:[], view:'home', category:'All', query:'', expanded:new Set(), ready:false,
       favourites:readStore(FAV_KEY,[]), recent:readStore(RECENT_KEY,[]) };
     const $ = id => document.getElementById(id);
     const COLORS = ['theme-blue','theme-orange','theme-green','theme-purple','theme-red','theme-teal'];
     const VIEWS = ['home','directory','favourites','admin'];
-    const appModal = new bootstrap.Modal($('appModal'));
 
     function readStore(key, fallback) {
       try { const value=JSON.parse(localStorage.getItem(key)); return Array.isArray(value)?value:fallback; }
@@ -283,13 +266,50 @@
       $('toastArea').appendChild(item); setTimeout(()=>item.remove(),4500);
     }
     function fail(err) { const msg=err && err.message ? err.message : String(err); toast(msg,true); }
-    function rpc(method,...args) {
+    const APPS_SCRIPT_URL = (window.OMFS_CONFIG && window.OMFS_CONFIG.appsScriptUrl || '').trim();
+    const APPS_CACHE_KEY = 'omfs-public-cache-v1';
+    let requestSeq = 0;
+    function isAppsScriptUrl(url) {
+      try {
+        const parsed = new URL(url);
+        return parsed.protocol === 'https:' && parsed.hostname === 'script.google.com' &&
+          /^\/(?:a\/macros\/[^/]+\/)?macros\/s\/[^/]+\/exec$/.test(parsed.pathname);
+      } catch (_) { return false; }
+    }
+    function rpc(method) {
+      if (method !== 'listPortalApps') return Promise.reject(new Error('Administrator functions must be used in the Apps Script console.'));
+      if (!isAppsScriptUrl(APPS_SCRIPT_URL)) {
+        return Promise.reject(new Error('GitHub setup is incomplete: edit config.js with the Apps Script /exec URL.'));
+      }
       return new Promise((resolve,reject)=>{
-        if (!window.google || !google.script || !google.script.run) {
-          reject(new Error('Open this page from your deployed Apps Script web app URL.')); return;
-        }
-        google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[method](...args);
+        // JSONP is only used for public app listings. Never put secrets in the URL.
+        const callback='omfsCB_'+Date.now().toString(36)+'_'+(++requestSeq).toString(36)+'_'+
+          Math.random().toString(36).slice(2,10);
+        const script=document.createElement('script');
+        let completed=false;
+        const cleanup=()=>{clearTimeout(timeout);delete window[callback];script.remove();};
+        const finish=(error,value)=>{if(completed)return;completed=true;cleanup();error?reject(error):resolve(value);};
+        window[callback] = (message) => {
+          if(!message || message.ok !== true || !Array.isArray(message.apps)) {
+            finish(new Error(message && message.error || 'Invalid response from Google Apps Script.'));return;
+          }
+          finish(null,message.apps);
+        };
+        const timeout=setTimeout(()=>finish(new Error('Server did not respond. Verify Apps Script is deployed to Anyone and the URL is correct.')),16000);
+        script.onerror=()=>finish(new Error('Cannot load app list. Check network, script deployment and URL.'));
+        const query=new URL(APPS_SCRIPT_URL);
+        query.searchParams.set('action','public');query.searchParams.set('callback',callback);
+        query.searchParams.set('_',String(Date.now()));
+        script.src=query.href;
+        document.head.appendChild(script);
       });
+    }
+    function readAppCache() {
+      try { const value=JSON.parse(localStorage.getItem(APPS_CACHE_KEY)); return Array.isArray(value)?value:[]; }
+      catch (_) { return []; }
+    }
+    function rememberApps(apps) {
+      try { localStorage.setItem(APPS_CACHE_KEY,JSON.stringify(apps)); } catch (_) {}
     }
     function validUrl(url) {
       try {const u=new URL(String(url));return ['https:','http:'].includes(u.protocol)?u.href:null;}
@@ -402,31 +422,14 @@
         emptyBox('fa-regular fa-star','No saved apps. Open All Applications and tap a star.'));
     }
     function renderAdmin() {
-      const signed=!!state.adminKey;$('adminLogin').hidden=signed;$('adminPanel').hidden=!signed;
-      if (!signed)return;
-      const query=$('adminSearch').value.trim().toLowerCase();const status=$('adminStatusFilter').value;
-      const filtered=state.adminApps.filter(a=>(status==='All'||a.status===status)&&
-        [a.name,a.category,a.tag].some(v=>String(v||'').toLowerCase().includes(query)));
-      $('adminCount').textContent=filtered.length+' visible / '+state.adminApps.length+' total apps (including inactive)';
-      const body=$('adminRows');body.replaceChildren();
-      filtered.forEach(app=>{
-        const tr=document.createElement('tr');
-        const col=textEl('td');col.appendChild(textEl('div','admin-row-title',app.name));
-        col.appendChild(textEl('div','admin-row-sub',app.url||''));tr.appendChild(col);
-        tr.appendChild(textEl('td','',app.category));tr.appendChild(textEl('td','',app.status));
-        tr.appendChild(textEl('td','',app.sort_order));
-        const controls=textEl('td');
-        const actions=[
-          ['fa-solid fa-arrow-up','Move up',()=>moveApp(app.id,-1)],
-          ['fa-solid fa-arrow-down','Move down',()=>moveApp(app.id,1)],
-          ['fa-solid fa-pen','Edit',()=>showAppEditor(app)],
-          ['fa-solid fa-trash-can','Delete',()=>deleteApp(app)]
-        ];
-        actions.forEach(([icon,title,fn])=>{const btn=textEl('button','mini-action'+(title==='Delete'?' danger':''));
-          btn.type='button';btn.title=title;btn.setAttribute('aria-label',title+' '+app.name);
-          btn.appendChild(textEl('i',icon));btn.addEventListener('click',fn);controls.appendChild(btn);});
-        tr.appendChild(controls);body.appendChild(tr);
-      });
+      const link=$('openManageLink');
+      $('legacyExportPanel').hidden=readStore('omfs-apps',[]).length===0;
+      if (isAppsScriptUrl(APPS_SCRIPT_URL)) {
+        const url=new URL(APPS_SCRIPT_URL);url.searchParams.set('view','admin');
+        link.href=url.href;link.classList.remove('disabled');link.removeAttribute('aria-disabled');
+      } else {
+        link.href='#';link.classList.add('disabled');link.setAttribute('aria-disabled','true');
+      }
     }
     function render() {
       if(!state.ready)return;
@@ -446,86 +449,28 @@
       $('appError').hidden=true;
       try {
         const apps=await rpc('listPortalApps');
-        state.apps=Array.isArray(apps)?apps:[];
+        state.apps=apps;rememberApps(apps);
         state.ready=true;cleanStoredIds();render();
-        if(state.adminKey)await refreshAdmin();
-      } catch (e) { $('appError').textContent='Unable to load the application directory: '+(e.message||e);
-        $('appError').hidden=false;fail(e); }
-      finally {if(showSpinner)hideBusy();}
-    }
-    async function refreshAdmin() {
-      if(!state.adminKey)return;
-      state.adminApps=await rpc('listPortalApps',state.adminKey);render();
+      } catch (e) {
+        const cached=readAppCache();
+        if(cached.length) {
+          state.apps=cached;state.ready=true;cleanStoredIds();render();
+          $('appError').textContent='Offline / connection problem: displaying your last saved directory. Shared updates may not be shown.';
+        } else {
+          $('appError').textContent='Unable to load the directory: '+(e.message||e);
+          fail(e);
+        }
+        $('appError').hidden=false;
+      } finally {if(showSpinner)hideBusy();}
     }
     async function refreshAll() {
       showBusy('Refreshing directory...');
-      try {const apps=await rpc('listPortalApps');state.apps=apps||[];
-        if(state.adminKey)state.adminApps=await rpc('listPortalApps',state.adminKey);
-        state.ready=true;cleanStoredIds();render();toast('Application directory refreshed.');}
-      catch(e){fail(e);}finally{hideBusy();}
-    }
-    async function adminLogin(event) {
-      event.preventDefault();const key=$('adminPassword').value;
-      showBusy('Checking administrator access...');
-      try {await rpc('authenticatePortalAdmin',key);state.adminKey=key;
-        state.adminApps=await rpc('listPortalApps',key);
-        $('adminPassword').value='';render();toast('Administrator access unlocked.');}
-      catch(e){state.adminKey='';fail(e);}finally{hideBusy();}
-    }
-    function logout(){state.adminKey='';state.adminApps=[];render();toast('Administrator signed out.');}
-    function showAppEditor(app) {
-      $('appForm').reset();const editing=!!app;
-      $('appModalTitle').textContent=editing?'Edit Application':'Add Application';
-      $('editAppId').value=editing?app.id:'';
-      $('appTitle').value=editing?app.name:'';
-      $('appUrl').value=editing&&app.url!=='#'?app.url:'';
-      $('appDesc').value=editing?app.desc:'';
-      $('appCategory').value=editing?app.category:'General';
-      $('appTags').value=editing?app.tag:'';
-      $('appIcon').value=editing?app.icon:'fa-solid fa-link';
-      $('appColor').value=editing?app.color:'theme-blue';
-      $('appStatus').value=editing?app.status:'Online';
-      $('appOrder').value=editing?app.sort_order:'';
-      const suggestions=$('categorySuggestions');suggestions.replaceChildren();
-      categoriesOf(state.adminApps).forEach(c=>{const item=document.createElement('option');item.value=c;suggestions.appendChild(item);});
-      appModal.show();
-    }
-    async function saveApp(event) {
-      event.preventDefault();if(!$('appForm').reportValidity())return;
-      const payload={id:$('editAppId').value,name:$('appTitle').value.trim(),url:$('appUrl').value.trim()||'#',
-        desc:$('appDesc').value.trim(),category:$('appCategory').value.trim()||'General',
-        tag:$('appTags').value.trim(),icon:$('appIcon').value.trim(),color:$('appColor').value,
-        status:$('appStatus').value,sort_order:$('appOrder').value};
-      if(payload.status==='Online'&&!validUrl(payload.url)){toast('Online applications need a valid http(s) URL.',true);return;}
-      showBusy('Saving application...');
-      try {await rpc('savePortalApp',state.adminKey,payload);appModal.hide();
-        await Promise.all([rpc('listPortalApps'),rpc('listPortalApps',state.adminKey)]).then(([p,a])=>{state.apps=p;state.adminApps=a;});
-        cleanStoredIds();render();toast('Application saved.');}
-      catch(e){fail(e);}finally{hideBusy();}
-    }
-    async function deleteApp(app) {
-      if (!confirm('Permanently delete "'+app.name+'" from the shared portal? This cannot be undone.'))return;
-      showBusy('Deleting application...');
-      try {await rpc('deletePortalApp',state.adminKey,app.id);await refreshAfterWrite();toast('Application deleted.');}
-      catch(e){fail(e);}finally{hideBusy();}
-    }
-    async function moveApp(id,direction) {
-      showBusy('Updating application order...');
-      try {await rpc('movePortalApp',state.adminKey,id,direction);await refreshAfterWrite();}
-      catch(e){fail(e);}finally{hideBusy();}
-    }
-    async function refreshAfterWrite() {
-      const [publicApps,adminApps]=await Promise.all([rpc('listPortalApps'),rpc('listPortalApps',state.adminKey)]);
-      state.apps=publicApps;state.adminApps=adminApps;cleanStoredIds();render();
-    }
-    async function importOldApps() {
-      const oldApps=readStore('omfs-apps',[]);
-      if (!oldApps.length){toast('No old browser apps found on this device.',true);return;}
-      if (!confirm('Import '+oldApps.length+' browser-saved apps into the shared Google Sheet? Existing titles/links will be skipped.'))return;
-      showBusy('Importing old application entries...');
-      try {const result=await rpc('importLegacyPortalApps',state.adminKey,oldApps);
-        await refreshAfterWrite();toast('Imported '+result.added+' apps; skipped '+result.skipped+' duplicates/invalid entries.');}
-      catch(e){fail(e);}finally{hideBusy();}
+      try {
+        const apps=await rpc('listPortalApps');
+        state.apps=apps;rememberApps(apps);state.ready=true;cleanStoredIds();render();
+        $('appError').hidden=true;toast('Application directory refreshed.');
+      } catch(e){fail(e);}
+      finally{hideBusy();}
     }
     function setupTheme() {
       let theme='light';try {theme=localStorage.getItem(THEME_KEY)||'light';}catch(_){}
@@ -541,19 +486,27 @@
     document.querySelectorAll('[data-view]').forEach(btn=>btn.addEventListener('click',()=>switchView(btn.dataset.view)));
     $('adminShortcut').addEventListener('click',()=>switchView('admin'));
     $('refreshBtn').addEventListener('click',refreshAll);
-    $('adminLoginForm').addEventListener('submit',adminLogin);
-    $('adminLogout').addEventListener('click',logout);
-    $('addAppBtn').addEventListener('click',()=>showAppEditor(null));
-    $('importBtn').addEventListener('click',importOldApps);
-    $('appForm').addEventListener('submit',saveApp);
-    $('adminSearch').addEventListener('input',renderAdmin);
-    $('adminStatusFilter').addEventListener('change',renderAdmin);
     $('searchInput').addEventListener('input',event=>{
       state.query=event.target.value;$('clearSearch').style.display=state.query?'block':'none';
       if(state.query.trim())state.view='directory';render();
     });
     $('clearSearch').addEventListener('click',()=>{$('searchInput').value='';state.query='';
       $('clearSearch').style.display='none';render();$('searchInput').focus();});
+    $('exportLegacyBtn').addEventListener('click',()=>{
+      const oldApps=readStore('omfs-apps',[]);
+      if(!oldApps.length){toast('No previous browser apps were found.',true);return;}
+      const blob=new Blob([JSON.stringify(oldApps,null,2)],{type:'application/json'});
+      const url=URL.createObjectURL(blob);const a=document.createElement('a');
+      a.href=url;a.download='omfs-legacy-apps.json';document.body.appendChild(a);a.click();a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),1000);
+      toast('Downloaded '+oldApps.length+' previous entries. Import this file using Apps Script Manage.');
+    });
+    $('openManageLink').addEventListener('click',(event)=>{
+      if (!isAppsScriptUrl(APPS_SCRIPT_URL)) {event.preventDefault();toast('Edit config.js and enter the correct /exec URL first.',true);}
+    });
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+    }
     setupTheme();loadApps(true);
   })();
   </script>
